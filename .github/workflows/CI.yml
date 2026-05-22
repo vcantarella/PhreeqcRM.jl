@@ -76,7 +76,7 @@ jobs:
           else
             echo "JULIA_PHREEQCRM_PATH=$PWD/deps/usr/lib/libPhreeqcRM.so" >> "$GITHUB_ENV"
           fi
-      - uses: julia-actions/cache@v2
+      - uses: julia-actions/cache@v3
       - name: Instantiate
         run: |
           julia --project=./      -e 'using Pkg; Pkg.instantiate()'
@@ -124,7 +124,7 @@ jobs:
           path: deps/usr
       - name: Set JULIA_PHREEQCRM_PATH
         run: echo "JULIA_PHREEQCRM_PATH=$PWD/deps/usr/lib/libPhreeqcRM.so" >> "$GITHUB_ENV"
-      - uses: julia-actions/cache@v2
+      - uses: julia-actions/cache@v3
       - name: Build & deploy
         env:
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
