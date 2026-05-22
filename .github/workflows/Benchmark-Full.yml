@@ -65,7 +65,7 @@ jobs:
           ref: benchmark-history
           fetch-depth: 1
         continue-on-error: true   # branch may not exist yet
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: benchmark-full-*
           path: incoming/

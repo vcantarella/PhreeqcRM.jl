@@ -64,7 +64,7 @@ jobs:
         if: matrix.os == 'macos-latest'
         run: brew install libomp
       - name: Download libphreeqcrm artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: libphreeqcrm-${{ matrix.os }}
           path: deps/usr
@@ -118,7 +118,7 @@ jobs:
         with:
           version: '1'
       - name: Download libphreeqcrm artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: libphreeqcrm-ubuntu-latest
           path: deps/usr
