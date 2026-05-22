@@ -1,0 +1,10 @@
+name = "PhreeqcRM_jll"
+uuid = "6273f136-9a40-47e5-842b-f55d677a0f22"
+version = "0.1.0"
+authors = ["vcantarella <vcantarella@gmail.com>"]
+
+[deps]
+Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
+
+[compat]
+Libdl = "1.11.0"

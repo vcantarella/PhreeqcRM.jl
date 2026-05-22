@@ -1,0 +1,7 @@
+[deps]
+Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+PhreeqcRM = "a977fe6a-62b6-4403-9ce1-1bf4e89efcce"
+PhreeqcRM_jll = "6273f136-9a40-47e5-842b-f55d677a0f22"
+TestItemRunner = "f8b46487-2199-4994-9208-9a1283c18c0a"
+TestItems = "1c621080-faea-4a02-84b6-bbd5e436b8fe"

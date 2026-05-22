@@ -1,0 +1,64 @@
+   Input file: /Users/vcantarella/wc/phreeqc_in_julia/PhreeqcRM/test/reference_suite/_scripts/../ex12/input.pqi
+  Output file: /Users/vcantarella/wc/phreeqc_in_julia/PhreeqcRM/test/reference_suite/_scripts/../ex12/reference/cli.out
+Database file: /usr/local/share/doc/phreeqc/database/phreeqc.dat
+
+------------------
+Reading data base.
+------------------
+
+	SOLUTION_MASTER_SPECIES
+	SOLUTION_SPECIES
+	PHASES
+	EXCHANGE_MASTER_SPECIES
+	EXCHANGE_SPECIES
+	SURFACE_MASTER_SPECIES
+	SURFACE_SPECIES
+	RATES
+	END
+------------------------------------
+Reading input data for simulation 1.
+------------------------------------
+
+	TITLE Example 12.--Advective and diffusive transport of heat and solutes.
+	      Two different boundary conditions at column ends.
+	      After diffusion temperature should equal Na-conc in mmol/l.
+	SOLUTION 0   24.0 mM KNO3
+	    units mol/kgw
+	    temp  0     # Incoming solution 0C
+	    pH    7.0
+	    pe   12.0   O2(g) -0.67
+	    K    24.e-3
+	    N(5) 24.e-3
+	SOLUTION 1-60   0.001 mM KCl
+	    units mol/kgw
+	    temp 25    # Column is at 25C
+	    pH   7.0
+	    pe  12.0   O2(g) -0.67
+	    K    1e-6
+	    Cl   1e-6
+	EXCHANGE_SPECIES
+	    Na+ + X- = NaX
+	    log_k       0.0
+	    gamma      4.0     0.075
+	    H+ + X- = HX
+	    log_k       -99.
+	    gamma      9.0     0.0
+	    K+ + X- = KX
+	    log_k       0.0
+	    gamma       3.5     0.015
+	EXCHANGE 1-60
+	    KX    0.048
+	PRINT
+	   reset   false
+WARNING: 
+Calculating transport: 60 (mobile) cells, 60 shifts, 0 mixruns...
+
+
+WARNING: 
+Calculating transport: 60 (mobile) cells, 1 shifts, 122 mixruns...
+
+
+----------------------------------
+End of Run after 0.332072 Seconds.
+----------------------------------
+

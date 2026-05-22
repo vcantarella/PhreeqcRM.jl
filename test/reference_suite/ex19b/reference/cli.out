@@ -1,0 +1,28 @@
+   Input file: /Users/vcantarella/wc/phreeqc_in_julia/PhreeqcRM/test/reference_suite/_scripts/../ex19b/input.pqi
+  Output file: /Users/vcantarella/wc/phreeqc_in_julia/PhreeqcRM/test/reference_suite/_scripts/../ex19b/reference/cli.out
+Database file: /usr/local/share/doc/phreeqc/database/phreeqc.dat
+
+------------------
+Reading data base.
+------------------
+
+	SOLUTION_MASTER_SPECIES
+	SOLUTION_SPECIES
+	PHASES
+	EXCHANGE_MASTER_SPECIES
+	EXCHANGE_SPECIES
+	SURFACE_MASTER_SPECIES
+	SURFACE_SPECIES
+	RATES
+	END
+------------------------------------
+Reading input data for simulation 1.
+------------------------------------
+
+	TITLE Example 19B.--Cd sorption on X, Hfo and OC in loamy soil
+	PRINT
+	        reset false
+----------------------------------
+End of Run after 0.031441 Seconds.
+----------------------------------
+
