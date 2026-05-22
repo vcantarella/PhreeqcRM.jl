@@ -1,0 +1,134 @@
+name: CI
+on:
+  push:
+    branches: [main]
+    tags: ['*']
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  # Build libphreeqcrm once per OS, cache by upstream tag + cmake flags.
+  build-libphreeqcrm:
+    name: Build libphreeqcrm (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache libphreeqcrm
+        id: cache-lib
+        uses: actions/cache@v4
+        with:
+          path: deps/usr
+          key: libphreeqcrm-${{ matrix.os }}-v3.9.0-v3
+      - name: Install libomp (macOS only)
+        if: matrix.os == 'macos-latest' && steps.cache-lib.outputs.cache-hit != 'true'
+        run: brew install libomp
+      - name: Build
+        if: steps.cache-lib.outputs.cache-hit != 'true'
+        run: bash deps/build_phreeqcrm.sh
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: libphreeqcrm-${{ matrix.os }}
+          path: deps/usr
+          retention-days: 1
+
+  test:
+    name: Test (${{ matrix.os }} / julia ${{ matrix.julia-version }} / -t ${{ matrix.threads }})
+    needs: build-libphreeqcrm
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        julia-version: ['1.10', '1', 'nightly']
+        threads: ['1', '4']
+        exclude:
+          # Limit the matrix: nightly only on Linux + threads=4 to detect future breakage.
+          - os: macos-latest
+            julia-version: nightly
+          - julia-version: nightly
+            threads: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: ${{ matrix.julia-version }}
+      - name: Install libomp (macOS only)
+        if: matrix.os == 'macos-latest'
+        run: brew install libomp
+      - name: Download libphreeqcrm artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: libphreeqcrm-${{ matrix.os }}
+          path: deps/usr
+      - name: Set JULIA_PHREEQCRM_PATH
+        shell: bash
+        run: |
+          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            echo "JULIA_PHREEQCRM_PATH=$PWD/deps/usr/lib/libPhreeqcRM.dylib" >> "$GITHUB_ENV"
+          else
+            echo "JULIA_PHREEQCRM_PATH=$PWD/deps/usr/lib/libPhreeqcRM.so" >> "$GITHUB_ENV"
+          fi
+      - uses: julia-actions/cache@v2
+      - name: Instantiate
+        run: |
+          julia --project=./      -e 'using Pkg; Pkg.instantiate()'
+          julia --project=./test -e 'using Pkg; Pkg.instantiate()'
+      - name: Run :fast tier
+        env:
+          JULIA_NUM_THREADS: ${{ matrix.threads }}
+        run: |
+          julia --project=./test -e '
+            using TestItemRunner
+            @run_package_tests filter = ti -> !(:perf in ti.tags || :threads in ti.tags || :bench in ti.tags)
+          '
+      - name: Run :perf tier (Linux only)
+        if: matrix.os == 'ubuntu-latest'
+        env:
+          JULIA_NUM_THREADS: '1'
+        run: |
+          julia --project=./test -e '
+            using TestItemRunner
+            @run_package_tests filter = ti -> :perf in ti.tags
+          '
+      - name: Run :threads tier
+        if: matrix.threads != '1'
+        env:
+          JULIA_NUM_THREADS: ${{ matrix.threads }}
+        run: |
+          julia --project=./test -e '
+            using TestItemRunner
+            @run_package_tests filter = ti -> :threads in ti.tags
+          '
+
+  docs:
+    name: Docs
+    needs: build-libphreeqcrm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: '1'
+      - name: Download libphreeqcrm artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: libphreeqcrm-ubuntu-latest
+          path: deps/usr
+      - name: Set JULIA_PHREEQCRM_PATH
+        run: echo "JULIA_PHREEQCRM_PATH=$PWD/deps/usr/lib/libPhreeqcRM.so" >> "$GITHUB_ENV"
+      - uses: julia-actions/cache@v2
+      - name: Build & deploy
+        env:
+          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
+          GITHUB_TOKEN:   ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          julia --project=./docs -e 'using Pkg; Pkg.instantiate()'
+          julia --project=./docs ./docs/make.jl

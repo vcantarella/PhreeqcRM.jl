@@ -1,0 +1,46 @@
+name: Benchmark (quick)
+on:
+  pull_request:
+
+concurrency:
+  group: bench-quick-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quick:
+    name: Quick benchmark — PR gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: '1.10'
+      - uses: julia-actions/cache@v2
+      - name: Cache libphreeqcrm
+        id: cache-lib
+        uses: actions/cache@v4
+        with:
+          path: deps/usr
+          key: libphreeqcrm-ubuntu-latest-v3.9.0-v3
+      - name: Build libphreeqcrm
+        if: steps.cache-lib.outputs.cache-hit != 'true'
+        run: bash deps/build_phreeqcrm.sh
+      - name: Set JULIA_PHREEQCRM_PATH
+        run: echo "JULIA_PHREEQCRM_PATH=$PWD/deps/usr/lib/libPhreeqcRM.so" >> "$GITHUB_ENV"
+      - name: Instantiate
+        run: julia --project=./benchmark -e 'using Pkg; Pkg.instantiate()'
+      - name: Run quick benchmark
+        # Exits non-zero on >5% regression vs committed baseline (or no-op if no
+        # baseline for this Julia version).
+        run: julia --project=./benchmark ./benchmark/runbench.jl --tier=quick
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-quick-results
+          path: |
+            ./benchmark/latest.json
+            ./benchmark/judge_*.json
+            ./benchmark/judge_summary.md
+            ./benchmark/plots/
+          retention-days: 14

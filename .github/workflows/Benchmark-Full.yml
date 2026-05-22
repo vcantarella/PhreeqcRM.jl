@@ -1,0 +1,84 @@
+name: Benchmark (full)
+on:
+  push:
+    branches: [main]
+    tags: ['*']
+  workflow_dispatch:
+
+concurrency:
+  group: bench-full-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  full:
+    name: Full benchmark
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        julia-version: ['1.10', '1', 'nightly']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: ${{ matrix.julia-version }}
+      - uses: julia-actions/cache@v2
+      - name: Cache libphreeqcrm
+        id: cache-lib
+        uses: actions/cache@v4
+        with:
+          path: deps/usr
+          key: libphreeqcrm-ubuntu-latest-v3.9.0-v3
+      - name: Build libphreeqcrm
+        if: steps.cache-lib.outputs.cache-hit != 'true'
+        run: bash deps/build_phreeqcrm.sh
+      - name: Set JULIA_PHREEQCRM_PATH
+        run: echo "JULIA_PHREEQCRM_PATH=$PWD/deps/usr/lib/libPhreeqcRM.so" >> "$GITHUB_ENV"
+      - name: Instantiate
+        run: julia --project=./benchmark -e 'using Pkg; Pkg.instantiate()'
+      - name: Run full benchmark
+        # Failures on nightly are informational; the matrix `continue-on-error`
+        # below would block this from masking real regressions on stable.
+        continue-on-error: ${{ matrix.julia-version == 'nightly' }}
+        run: julia --project=./benchmark ./benchmark/runbench.jl --tier=full
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-full-${{ matrix.julia-version }}
+          path: |
+            ./benchmark/latest.json
+            ./benchmark/judge_*.json
+            ./benchmark/judge_summary.md
+            ./benchmark/plots/
+          retention-days: 90
+
+  # Append per-(julia version, sha) results to a history branch for trend plots.
+  append-history:
+    name: Append to benchmark-history branch
+    needs: full
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: benchmark-history
+          fetch-depth: 1
+        continue-on-error: true   # branch may not exist yet
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: benchmark-full-*
+          path: incoming/
+      - name: Move & commit
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          for d in incoming/*; do
+            ver=$(basename "$d" | sed 's/benchmark-full-//')
+            mkdir -p "$ver"
+            cp "$d/benchmark/latest.json" "$ver/${GITHUB_SHA}.json" || true
+          done
+          rm -rf incoming
+          git add .
+          git commit -m "Benchmark snapshot ${GITHUB_SHA}" || echo "nothing to commit"
+          git push origin HEAD:benchmark-history || true
