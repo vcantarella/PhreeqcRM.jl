@@ -33,7 +33,7 @@ jobs:
         if: steps.cache-lib.outputs.cache-hit != 'true'
         run: bash deps/build_phreeqcrm.sh
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: libphreeqcrm-${{ matrix.os }}
           path: deps/usr
