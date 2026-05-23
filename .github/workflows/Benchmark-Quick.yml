@@ -28,7 +28,7 @@ jobs:
       - name: Set JULIA_PHREEQCRM_PATH
         run: echo "JULIA_PHREEQCRM_PATH=$PWD/deps/usr/lib/libPhreeqcRM.so" >> "$GITHUB_ENV"
       - name: Instantiate
-        run: julia --project=./benchmark -e 'using Pkg; Pkg.instantiate()'
+        run: julia --project=./benchmark .github/ci/dev_local.jl
       - name: Run quick benchmark
         # Exits non-zero on >5% regression vs committed baseline (or no-op if no
         # baseline for this Julia version).

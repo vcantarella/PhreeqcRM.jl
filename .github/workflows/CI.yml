@@ -79,8 +79,8 @@ jobs:
       - uses: julia-actions/cache@v3
       - name: Instantiate
         run: |
-          julia --project=./      -e 'using Pkg; Pkg.instantiate()'
-          julia --project=./test -e 'using Pkg; Pkg.instantiate()'
+          julia --project=./     .github/ci/dev_local.jl
+          julia --project=./test .github/ci/dev_local.jl
       - name: Run :fast tier
         env:
           JULIA_NUM_THREADS: ${{ matrix.threads }}
@@ -130,5 +130,5 @@ jobs:
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
           GITHUB_TOKEN:   ${{ secrets.GITHUB_TOKEN }}
         run: |
-          julia --project=./docs -e 'using Pkg; Pkg.instantiate()'
+          julia --project=./docs .github/ci/dev_local.jl
           julia --project=./docs ./docs/make.jl

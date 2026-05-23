@@ -35,7 +35,7 @@ jobs:
       - name: Set JULIA_PHREEQCRM_PATH
         run: echo "JULIA_PHREEQCRM_PATH=$PWD/deps/usr/lib/libPhreeqcRM.so" >> "$GITHUB_ENV"
       - name: Instantiate
-        run: julia --project=./benchmark -e 'using Pkg; Pkg.instantiate()'
+        run: julia --project=./benchmark .github/ci/dev_local.jl
       - name: Run full benchmark
         # Failures on nightly are informational; the matrix `continue-on-error`
         # below would block this from masking real regressions on stable.
