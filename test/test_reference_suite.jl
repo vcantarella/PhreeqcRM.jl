@@ -20,7 +20,7 @@ using TestItems
     function db_path(name::AbstractString)
         for d in [
             "/usr/local/share/doc/phreeqc/database",
-            joinpath(@__DIR__, "..", "..", "deps", "usr", "share", "doc",
+            joinpath(@__DIR__, "..", "deps", "usr", "share", "doc",
                      "PhreeqcRM", "database"),
         ]
             p = joinpath(d, name)

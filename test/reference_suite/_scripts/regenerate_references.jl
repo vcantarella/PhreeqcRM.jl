@@ -17,7 +17,7 @@ end
 
 const DB_CANDIDATES = [
     "/usr/local/share/doc/phreeqc/database",
-    joinpath(@__DIR__, "..", "..", "..", "..", "deps", "usr", "share", "doc", "PhreeqcRM", "database"),
+    joinpath(@__DIR__, "..", "..", "..", "deps", "usr", "share", "doc", "PhreeqcRM", "database"),
 ]
 function db_path(name)
     for d in DB_CANDIDATES

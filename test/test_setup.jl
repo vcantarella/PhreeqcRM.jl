@@ -11,7 +11,7 @@ using TestItems
     # build, fall back to a system PHREEQC install.
     function database_path()
         for c in [
-            joinpath(@__DIR__, "..", "..", "deps", "usr", "share", "doc",
+            joinpath(@__DIR__, "..", "deps", "usr", "share", "doc",
                      "PhreeqcRM", "database", "phreeqc.dat"),
             "/usr/local/share/doc/phreeqc/database/phreeqc.dat",
         ]
