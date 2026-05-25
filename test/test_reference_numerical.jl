@@ -177,31 +177,34 @@ end
     using DelimitedFiles
     c_binary = joinpath(@__DIR__, "c_build", "ex11_driver")
     if !isfile(c_binary)
+        # `return` at @testitem module scope is a no-op, so the skip path
+        # must be an explicit else branch — otherwise execution falls through
+        # to `run($c_binary)` and ENOENTs.
         @info "ex11_driver not built (run `make -C test/c_build`)"
-        return
-    end
-    casedir = joinpath(@__DIR__, "reference_suite", "ex11")
+    else
+        casedir = joinpath(@__DIR__, "reference_suite", "ex11")
 
-    # Run C driver in a temp dir so it doesn't pollute the suite.
-    tmp = mktempdir()
-    cd(tmp) do
-        run(`$c_binary`)
-        @assert isfile("ex11.sel")
-        c_out = readdlm("ex11.sel"; skipstart = 1)
-        c_mat = Matrix{Float64}(c_out[:, 1:6])
+        # Run C driver in a temp dir so it doesn't pollute the suite.
+        tmp = mktempdir()
+        cd(tmp) do
+            run(`$c_binary`)
+            @assert isfile("ex11.sel")
+            c_out = readdlm("ex11.sel"; skipstart = 1)
+            c_mat = Matrix{Float64}(c_out[:, 1:6])
 
-        # Run Julia driver fresh.
-        include(joinpath(casedir, "driver.jl"))
-        state = Base.invokelatest(Ex11Driver.setup_ex11)
-        j_mat = Base.invokelatest(Ex11Driver.collect_run, state)
-        Base.close(state.rm)
+            # Run Julia driver fresh.
+            include(joinpath(casedir, "driver.jl"))
+            state = Base.invokelatest(Ex11Driver.setup_ex11)
+            j_mat = Base.invokelatest(Ex11Driver.collect_run, state)
+            Base.close(state.rm)
 
-        @test size(c_mat) == size(j_mat)
-        # C and Julia drive the SAME library through SAME @ccall sequence —
-        # both write float-formatted output ("%.4e"). The Julia driver values
-        # may differ in the last few digits because we don't %.4e-truncate
-        # before comparing. Compare raw numbers loosely.
-        @test isapprox(c_mat, j_mat; rtol = 1e-4, atol = 1e-9) ||
-              error("C and Julia diverge: max |Δ| = $(maximum(abs.(c_mat - j_mat)))")
+            @test size(c_mat) == size(j_mat)
+            # C and Julia drive the SAME library through SAME @ccall sequence —
+            # both write float-formatted output ("%.4e"). The Julia driver values
+            # may differ in the last few digits because we don't %.4e-truncate
+            # before comparing. Compare raw numbers loosely.
+            @test isapprox(c_mat, j_mat; rtol = 1e-4, atol = 1e-9) ||
+                  error("C and Julia diverge: max |Δ| = $(maximum(abs.(c_mat - j_mat)))")
+        end
     end
 end
