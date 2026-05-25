@@ -7,4 +7,4 @@ authors = ["vcantarella <vcantarella@gmail.com>"]
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 
 [compat]
-Libdl = "1.11.0"
+Libdl = "1"
